@@ -48,6 +48,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 1
+        self.shield = 100
         self.speedy = 0
     def update(self):
         self.speedx = 0
@@ -132,6 +133,22 @@ for i in range(13):
     m = Mob()
     all_sprites.add(m)
     mobs.add(m)
+def draw_shield_bar(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = WIDTH -20
+    if pct >= 75:
+        color = GREEN
+    if 25 < pct < 75:
+        color = YELLOW
+    if 0 <= pct <= 25:
+        color = RED
+    BAR_HEIGHT = 10
+    fill = (pct / 100) * BAR_LENGTH
+    outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+    pygame.draw.rect(surf, color, fill_rect)
+    pygame.draw.rect(surf, WHITE, outline_rect, 2)
 pygame.mixer.music.play(loops=-1)
 running = True
 while running:
@@ -145,9 +162,11 @@ while running:
             if event.key == pygame.K_SPACE:
                 player.shoot()
     # Обновление
-    hits = pygame.sprite.spritecollide(player, mobs, False)
-    #if hits:
-       # running = False
+    hits = pygame.sprite.spritecollide(player, mobs, True)
+    if hits:
+        player.shield -= 30
+    if player.shield <= 0:
+        running = False
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
         m = Mob()
@@ -159,5 +178,6 @@ while running:
     screen.fill(BLACK)
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
+    draw_shield_bar(screen,10,10,player.shield)
     pygame.display.flip()
 pygame.quit()
