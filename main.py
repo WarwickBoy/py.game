@@ -25,7 +25,9 @@ background = pygame.image.load(path.join(img_dir, 'Backgrounds/purple.png')).con
 background_rect = background.get_rect()
 background = pygame.transform.scale(background,(WIDTH,HEIGHT))
 player_img = pygame.image.load(path.join(img_dir, "PNG/playerShip1_red.png")).convert()
-
+ 
+player_mini_img = pygame.transform.scale(player_img, (25, 19))
+player_mini_img.set_colorkey(BLACK)
 bullet_img = pygame.image.load(path.join(img_dir, "PNG/Lasers/laserRed05.png")).convert()
 shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'Playerlaser.wav'))
 shoot_sound.set_volume(0.3)
@@ -50,6 +52,8 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 1
         self.shield = 100
         self.speedy = 0
+        self.lives = 3
+
     def update(self):
         self.speedx = 0
         self.speedy = 0
@@ -166,6 +170,9 @@ while running:
     if hits:
         player.shield -= 30
     if player.shield <= 0:
+        player.shield = 100
+        player.lives -= 1
+    if player.lives <= 0:
         running = False
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
