@@ -53,7 +53,15 @@ class Player(pygame.sprite.Sprite):
         self.shield = 100
         self.speedy = 0
         self.lives = 3
+        self.hidden = False
+        self.hide_timer = pygame.time.get_ticks()
 
+    def hide(self):
+        # временно скрыть игрока
+        self.hidden = True
+        self.hide_timer = pygame.time.get_ticks()
+        #self.rect.center = (WIDTH / 2, HEIGHT + 200)
+        self.image.set_alpha(9)
     def update(self):
         self.speedx = 0
         self.speedy = 0
@@ -76,6 +84,10 @@ class Player(pygame.sprite.Sprite):
             self.rect.top = 0
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
+        if self.hidden and pygame.time.get_ticks() - self.hide_timer > 1000:
+            self.hidden = False
+            
+            self.image.set_alpha(255)
     def shoot(self):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_sprites.add(bullet)
@@ -137,6 +149,12 @@ for i in range(13):
     m = Mob()
     all_sprites.add(m)
     mobs.add(m)
+def draw_lives(surf, x, y, lives, img):
+    for i in range(lives):
+        img_rect = img.get_rect()
+        img_rect.x = x + 30 * i
+        img_rect.y = y
+        surf.blit(img, img_rect)
 def draw_shield_bar(surf, x, y, pct):
     if pct < 0:
         pct = 0
@@ -170,6 +188,7 @@ while running:
     if hits:
         player.shield -= 30
     if player.shield <= 0:
+        player.hide()
         player.shield = 100
         player.lives -= 1
     if player.lives <= 0:
@@ -186,5 +205,6 @@ while running:
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
     draw_shield_bar(screen,10,10,player.shield)
+    draw_lives(screen,10,30,player.lives,player_mini_img)
     pygame.display.flip()
 pygame.quit()
