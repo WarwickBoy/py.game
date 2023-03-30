@@ -55,6 +55,8 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
+        self.shoot_delay = 100
+        self.last_shot = pygame.time.get_ticks()
 
     def hide(self):
         # временно скрыть игрока
@@ -74,6 +76,9 @@ class Player(pygame.sprite.Sprite):
             self.speedy = -8
         if keystate[pygame.K_DOWN]:
             self.speedy = 8
+        if keystate[pygame.K_SPACE]:
+            self.shoot()
+
         self.rect.x += self.speedx
         self.rect.y += self.speedy
         if self.rect.right > WIDTH:
@@ -89,10 +94,12 @@ class Player(pygame.sprite.Sprite):
             
             self.image.set_alpha(255)
     def shoot(self):
-        bullet = Bullet(self.rect.centerx, self.rect.top)
-        all_sprites.add(bullet)
-        bullets.add(bullet)
-        shoot_sound.play()
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            bullet = Bullet(self.rect.centerx, self.rect.top)
+            all_sprites.add(bullet)
+            bullets.add(bullet)
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -180,9 +187,8 @@ while running:
         # проверить закрытие окна
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.shoot()
+       
+       
     # Обновление
     hits = pygame.sprite.spritecollide(player, mobs, True)
     if hits:
