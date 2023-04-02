@@ -25,7 +25,17 @@ background = pygame.image.load(path.join(img_dir, 'Backgrounds/purple.png')).con
 background_rect = background.get_rect()
 background = pygame.transform.scale(background,(WIDTH,HEIGHT))
 player_img = pygame.image.load(path.join(img_dir, "PNG/playerShip1_red.png")).convert()
- 
+explosion_anim = {}
+explosion_anim['lg'] = []
+explosion_anim['sm'] = []
+for i in range(9):
+    filename = 'explousion/regularExplosion0{}.png'.format(i)
+    img = pygame.image.load(path.join(img_dir, filename)).convert()
+    img.set_colorkey(BLACK)
+    img_lg = pygame.transform.scale(img, (75, 75))
+    explosion_anim['lg'].append(img_lg)
+    img_sm = pygame.transform.scale(img, (32, 32))
+    explosion_anim['sm'].append(img_sm)
 player_mini_img = pygame.transform.scale(player_img, (25, 19))
 player_mini_img.set_colorkey(BLACK)
 bullet_img = pygame.image.load(path.join(img_dir, "PNG/Lasers/laserRed05.png")).convert()
@@ -131,6 +141,31 @@ class Mob(pygame.sprite.Sprite):
           self.rot = (self.rot + self.rot_speed) % 360
           self.image = pygame.transform.rotate(self.image_orig, self.rot)
         # вращение спрайтов
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center, size):
+        pygame.sprite.Sprite.__init__(self)
+        self.size = size
+        self.image = explosion_anim[self.size][0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 50
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(explosion_anim[self.size]):
+                self.kill()
+            else:
+                center = self.rect.center
+                self.image = explosion_anim[self.size][self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -193,6 +228,8 @@ while running:
     hits = pygame.sprite.spritecollide(player, mobs, True)
     if hits:
         player.shield -= 30
+        expl = Explosion(player.rect.center, 'lg')
+        all_sprites.add(expl)
     if player.shield <= 0:
         player.hide()
         player.shield = 100
@@ -205,6 +242,8 @@ while running:
         all_sprites.add(m)
         mobs.add(m)
         expl_sound.play()
+        expl = Explosion(hit.rect.center,"lg")
+        all_sprites.add(expl)
     all_sprites.update()
     # Визуализация (сборка)
     screen.fill(BLACK)
